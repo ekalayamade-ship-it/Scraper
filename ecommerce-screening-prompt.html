@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DataScrape Pro — E-Commerce Screening Prompt Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #06060e;
+    --surface: #0e0e1c;
+    --surface2: #13131f;
+    --border: #1f1f35;
+    --accent: #ff5c2b;
+    --accent2: #ffaa00;
+    --accent-glow: rgba(255,92,43,0.18);
+    --text: #e5dfd4;
+    --muted: #555572;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid bg */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,92,43,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,92,43,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orb */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(255,92,43,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    animation: orbDrift 12s ease-in-out infinite alternate;
+  }
+  @keyframes orbDrift {
+    to { transform: translate(300px, 200px); }
+  }
+
+  /* Header */
+  header {
+    position: relative; z-index: 10;
+    border-bottom: 1px solid var(--border);
+    background: rgba(6,6,14,0.92);
+    backdrop-filter: blur(12px);
+    padding: 16px 36px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky; top: 0;
+  }
+  .logo-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 0 20px rgba(255,92,43,0.4);
+  }
+  .logo-text { line-height: 1; }
+  .logo-name {
+    font-family: var(--sans);
+    font-weight: 800; font-size: 15px; letter-spacing: 0.05em;
+    color: var(--accent);
+  }
+  .logo-sub { font-size: 9px; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 2px; }
+
+  /* Steps indicator */
+  .steps {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .step-dot {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: var(--muted);
+    transition: all 0.3s;
+    font-family: var(--mono);
+  }
+  .step-dot.active { border-color: var(--accent); color: #fff; background: var(--accent); box-shadow: 0 0 12px rgba(255,92,43,0.5); }
+  .step-dot.done { border-color: var(--accent); color: var(--accent); }
+  .step-line { width: 20px; height: 1px; background: var(--border); transition: background 0.3s; }
+  .step-line.done { background: var(--accent); }
+
+  /* Main */
+  main {
+    position: relative; z-index: 5;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* Page title */
+  .page-header { margin-bottom: 40px; animation: fadeUp 0.5s ease both; }
+  .page-eyebrow {
+    font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 10px;
+  }
+  .page-title {
+    font-family: var(--sans);
+    font-size: 34px; font-weight: 800; line-height: 1.2;
+  }
+  .page-title span { color: var(--accent); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Section */
+  .section {
+    margin-bottom: 32px;
+    animation: fadeUp 0.5s ease both;
+  }
+  .section-label {
+    font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* Chip */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 8px 18px; border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: var(--mono); font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .chip:hover { border-color: rgba(255,92,43,0.4); color: var(--text); }
+  .chip.active {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+    color: var(--accent);
+    box-shadow: 0 0 12px rgba(255,92,43,0.15);
+  }
+
+  /* Data type cards */
+  .data-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .data-card {
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface2);
+    cursor: pointer;
+    display: flex; align-items: center; gap: 12px;
+    transition: all 0.2s;
+    user-select: none;
+    position: relative; overflow: hidden;
+  }
+  .data-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255,92,43,0.04));
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .data-card:hover { border-color: rgba(255,92,43,0.3); }
+  .data-card:hover::before { opacity: 1; }
+  .data-card.active {
+    border-color: var(--accent);
+    background: rgba(255,92,43,0.06);
+    box-shadow: 0 0 16px rgba(255,92,43,0.1);
+  }
+  .data-card.active::before { opacity: 1; }
+  .data-icon { font-size: 22px; }
+  .data-label { font-size: 13px; font-weight: 700; font-family: var(--sans); }
+  .data-check {
+    margin-left: auto;
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 1px solid var(--muted);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: transparent;
+    transition: all 0.2s;
+  }
+  .data-card.active .data-check {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+  }
+
+  /* Target cards */
+  .target-list { display: flex; flex-direction: column; gap: 8px; }
+  .target-card {
+    padding: 13px 18px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface2);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .target-card:hover { border-color: rgba(255,92,43,0.3); }
+  .target-card.active { border-color: var(--accent); background: rgba(255,92,43,0.06); color: var(--text); }
+  .target-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); transition: all 0.2s; }
+  .target-card.active .target-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+
+  /* Input */
+  input[type=text], input[type=number] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 16px;
+    color: var(--text);
+    font-family: var(--mono); font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,92,43,0.1); }
+  input::placeholder { color: var(--muted); }
+
+  /* Param row */
+  .param-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .param-item label {
+    display: block; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  .param-item input { text-align: center; }
+
+  /* Buttons */
+  .btn {
+    padding: 14px 28px;
+    border: none; border-radius: 10px;
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(255,92,43,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(255,92,43,0.45); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled {
+    background: var(--surface2); color: var(--muted);
+    box-shadow: none; cursor: not-allowed; transform: none;
+  }
+  .btn-ghost {
+    background: var(--surface2); color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { border-color: rgba(255,92,43,0.3); color: var(--text); }
+  .btn-success {
+    background: rgba(76,175,80,0.15);
+    color: #4caf50; border: 1px solid #4caf50;
+  }
+
+  .btn-row { display: flex; gap: 12px; margin-top: 8px; }
+  .btn-row .btn:first-child:last-child { width: 100%; }
+  .btn-grow { flex: 1; }
+
+  /* Prompt output */
+  .prompt-box {
+    background: #040408;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-size: 11.5px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    color: #a8a4b8;
+    font-family: var(--mono);
+    position: relative;
+  }
+  .prompt-box::-webkit-scrollbar { width: 4px; }
+  .prompt-box::-webkit-scrollbar-track { background: transparent; }
+  .prompt-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .badge {
+    padding: 4px 14px; border-radius: 100px; font-size: 10px; font-weight: 700;
+    background: rgba(255,92,43,0.1); border: 1px solid rgba(255,92,43,0.25);
+    color: #ffaa80; letter-spacing: 0.08em; font-family: var(--sans);
+  }
+
+  .tip-box {
+    margin-top: 18px; padding: 14px 18px; border-radius: 10px;
+    background: rgba(255,170,0,0.06); border: 1px solid rgba(255,170,0,0.2);
+    font-size: 12px; color: #ffcc66; line-height: 1.7;
+  }
+
+  /* Step visibility */
+  .step-page { display: none; }
+  .step-page.active { display: block; }
+
+  /* Scroll bar for prompt */
+  .prompt-bar {
+    position: absolute; top: 14px; right: 14px;
+    display: flex; gap: 6px;
+  }
+  .prompt-bar-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* Stagger animation delays */
+  .section:nth-child(1) { animation-delay: 0.05s; }
+  .section:nth-child(2) { animation-delay: 0.1s; }
+  .section:nth-child(3) { animation-delay: 0.15s; }
+  .section:nth-child(4) { animation-delay: 0.2s; }
+  .section:nth-child(5) { animation-delay: 0.25s; }
+
+  @media (max-width: 600px) {
+    .data-grid { grid-template-columns: 1fr; }
+    .param-grid { grid-template-columns: 1fr; }
+    header { padding: 14px 20px; }
+    main { padding: 32px 16px 60px; }
+    .page-title { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-icon">⚡</div>
+  <div class="logo-text">
+    <div class="logo-name">DataScrape Pro</div>
+    <div class="logo-sub">E-Commerce Screening Prompt Builder</div>
+  </div>
+  <div class="steps">
+    <div class="step-dot active" id="dot-1">1</div>
+    <div class="step-line" id="line-1"></div>
+    <div class="step-dot" id="dot-2">2</div>
+    <div class="step-line" id="line-2"></div>
+    <div class="step-dot" id="dot-3">3</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- STEP 1 -->
+  <div class="step-page active" id="page-1">
+    <div class="page-header">
+      <div class="page-eyebrow">Langkah 1 dari 3</div>
+      <h1 class="page-title">Konfigurasi<br><span>Target Scraping</span></h1>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Platform E-Commerce</div>
+      <div class="chips" id="platform-chips">
+        <div class="chip" data-val="Shopee" onclick="selectChip('platform','Shopee',this)">Shopee</div>
+        <div class="chip" data-val="Tokopedia" onclick="selectChip('platform','Tokopedia',this)">Tokopedia</div>
+        <div class="chip" data-val="Lazada" onclick="selectChip('platform','Lazada',this)">Lazada</div>
+        <div class="chip" data-val="Blibli" onclick="selectChip('platform','Blibli',this)">Blibli</div>
+        <div class="chip" data-val="Semua Platform" onclick="selectChip('platform','Semua Platform',this)">Semua Platform</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Kategori Produk</div>
+      <div class="chips" id="category-chips" style="margin-bottom:12px">
+        <div class="chip" onclick="selectCategory('Fashion &amp; Pakaian',this)">Fashion &amp; Pakaian</div>
+        <div class="chip" onclick="selectCategory('Elektronik &amp; Gadget',this)">Elektronik &amp; Gadget</div>
+        <div class="chip" onclick="selectCategory('Kecantikan &amp; Skincare',this)">Kecantikan &amp; Skincare</div>
+        <div class="chip" onclick="selectCategory('Makanan &amp; Minuman',this)">Makanan &amp; Minuman</div>
+        <div class="chip" onclick="selectCategory('Perabot Rumah',this)">Perabot Rumah</div>
+        <div class="chip" onclick="selectCategory('Mainan &amp; Hobi',this)">Mainan &amp; Hobi</div>
+        <div class="chip" onclick="selectCategory('Otomotif',this)">Otomotif</div>
+      </div>
+      <input type="text" id="custom-category" placeholder="Atau ketik kategori kustom..." oninput="customCat(this.value)"/>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Jenis Data yang Diambil</div>
+      <div class="data-grid">
+        <div class="data-card" data-id="price" onclick="toggleData('price',this)">
+          <span class="data-icon">💰</span>
+          <span class="data-label">Data Harga</span>
+          <div class="data-check">✓</div>
+        </div>
+        <div class="data-card" data-id="review" onclick="toggleData('review',this)">
+          <span class="data-icon">⭐</span>
+          <span class="data-label">Ulasan Produk</span>
+          <div class="data-check">✓</div>
+        </div>
+        <div class="data-card" data-id="trend" onclick="toggleData('trend',this)">
+          <span class="data-icon">📈</span>
+          <span class="data-label">Tren Produk</span>
+          <div class="data-check">✓</div>
+        </div>
+        <div class="data-card" data-id="competitor" onclick="toggleData('competitor',this)">
+          <span class="data-icon">🔍</span>
+          <span class="data-label">Analisis Kompetitor</span>
+          <div class="data-check">✓</div>
+        </div>
+        <div class="data-card" data-id="stock" onclick="toggleData('stock',this)">
+          <span class="data-icon">📦</span>
+          <span class="data-label">Stok &amp; Ketersediaan</span>
+          <div class="data-check">✓</div>
+        </div>
+        <div class="data-card" data-id="seller" onclick="toggleData('seller',this)">
+          <span class="data-icon">🏪</span>
+          <span class="data-label">Profil Penjual</span>
+          <div class="data-check">✓</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-step1" style="width:100%" onclick="goStep(2)" disabled>
+      Lanjut ke Parameter →
+    </button>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step-page" id="page-2">
+    <div class="page-header">
+      <div class="page-eyebrow">Langkah 2 dari 3</div>
+      <h1 class="page-title">Parameter &amp;<br><span>Target Pasar</span></h1>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Format Output Dataset</div>
+      <div class="chips">
+        <div class="chip" onclick="selectChip('outputFormat','CSV',this)">CSV</div>
+        <div class="chip" onclick="selectChip('outputFormat','Excel (.xlsx)',this)">Excel (.xlsx)</div>
+        <div class="chip" onclick="selectChip('outputFormat','JSON',this)">JSON</div>
+        <div class="chip" onclick="selectChip('outputFormat','Google Sheets',this)">Google Sheets</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Target Pembeli Dataset</div>
+      <div class="target-list">
+        <div class="target-card" onclick="selectTarget('Penjual Online / Reseller',this)">
+          <span>Penjual Online / Reseller</span><div class="target-dot"></div>
+        </div>
+        <div class="target-card" onclick="selectTarget('Distributor / Wholesaler',this)">
+          <span>Distributor / Wholesaler</span><div class="target-dot"></div>
+        </div>
+        <div class="target-card" onclick="selectTarget('Brand Owner',this)">
+          <span>Brand Owner</span><div class="target-dot"></div>
+        </div>
+        <div class="target-card" onclick="selectTarget('Riset Pasar / Analis',this)">
+          <span>Riset Pasar / Analis</span><div class="target-dot"></div>
+        </div>
+        <div class="target-card" onclick="selectTarget('Investor / VC',this)">
+          <span>Investor / VC</span><div class="target-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Parameter Lanjutan</div>
+      <div class="param-grid">
+        <div class="param-item">
+          <label>Rentang Waktu (hari)</label>
+          <input type="number" id="date-range" value="30" min="1" max="365" oninput="cfg.dateRange=this.value"/>
+        </div>
+        <div class="param-item">
+          <label>Min. Jumlah Ulasan</label>
+          <input type="number" id="min-reviews" value="10" min="0" oninput="cfg.minReviews=this.value"/>
+        </div>
+        <div class="param-item">
+          <label>Top N Produk</label>
+          <input type="number" id="top-n" value="100" min="10" max="1000" oninput="cfg.topN=this.value"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="goStep(1)">← Kembali</button>
+      <button class="btn btn-primary btn-grow" id="btn-step2" onclick="buildAndGo()" disabled>
+        ⚡ Generate Prompt
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step-page" id="page-3">
+    <div class="page-header">
+      <div class="page-eyebrow">Prompt Siap Digunakan</div>
+      <h1 class="page-title"><span>Prompt Generated</span> ✓</h1>
+    </div>
+
+    <div class="badge-row" id="badge-row"></div>
+
+    <div style="position:relative">
+      <div class="prompt-box" id="prompt-output"></div>
+    </div>
+
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn btn-primary btn-grow" id="copy-btn" onclick="copyPrompt()">📋 Salin Prompt</button>
+      <button class="btn btn-ghost" onclick="resetAll()">↺ Buat Baru</button>
+    </div>
+
+    <div class="tip-box">
+      💡 <strong>Cara Pakai:</strong> Salin prompt → tempel ke Claude, ChatGPT, atau AI lainnya → minta generate kode Python lengkap. Prompt sudah mencakup arsitektur folder, struktur dataset, dan implementasi scraper siap pakai.
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ── State ──────────────────────────────────────────────
+const cfg = {
+  platform: '',
+  category: '',
+  customCategory: '',
+  selectedData: [],
+  outputFormat: '',
+  targetBuyer: '',
+  dateRange: '30',
+  minReviews: '10',
+  topN: '100',
+};
+
+const dataLabels = {
+  price: { label: 'Data Harga', icon: '💰' },
+  review: { label: 'Ulasan Produk', icon: '⭐' },
+  trend: { label: 'Tren Produk', icon: '📈' },
+  competitor: { label: 'Analisis Kompetitor', icon: '🔍' },
+  stock: { label: 'Stok & Ketersediaan', icon: '📦' },
+  seller: { label: 'Profil Penjual', icon: '🏪' },
+};
+
+// ── UI Helpers ─────────────────────────────────────────
+function selectChip(field, val, el) {
+  cfg[field] = val;
+  el.closest('.chips').querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  validate();
+}
+
+function selectCategory(val, el) {
+  cfg.category = val;
+  cfg.customCategory = '';
+  document.getElementById('custom-category').value = '';
+  document.querySelectorAll('#category-chips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  validate();
+}
+
+function customCat(val) {
+  cfg.customCategory = val;
+  cfg.category = '';
+  document.querySelectorAll('#category-chips .chip').forEach(c => c.classList.remove('active'));
+  validate();
+}
+
+function toggleData(id, el) {
+  const idx = cfg.selectedData.indexOf(id);
+  if (idx === -1) cfg.selectedData.push(id);
+  else cfg.selectedData.splice(idx, 1);
+  el.classList.toggle('active', cfg.selectedData.includes(id));
+  validate();
+}
+
+function selectTarget(val, el) {
+  cfg.targetBuyer = val;
+  document.querySelectorAll('.target-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  validate();
+}
+
+function validate() {
+  const ok1 = cfg.platform && (cfg.category || cfg.customCategory) && cfg.selectedData.length > 0;
+  document.getElementById('btn-step1').disabled = !ok1;
+  const ok2 = cfg.outputFormat && cfg.targetBuyer;
+  document.getElementById('btn-step2').disabled = !ok2;
+}
+
+// ── Navigation ─────────────────────────────────────────
+function goStep(n) {
+  document.querySelectorAll('.step-page').forEach((p,i) => p.classList.toggle('active', i+1===n));
+  // Update step dots
+  [1,2,3].forEach(s => {
+    const dot = document.getElementById('dot-'+s);
+    dot.classList.toggle('active', s===n);
+    dot.classList.toggle('done', s<n);
+    dot.textContent = s < n ? '✓' : s;
+    if (s < 3) document.getElementById('line-'+s).classList.toggle('done', s<n);
+  });
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function buildAndGo() {
+  generatePrompt();
+  goStep(3);
+}
+
+function resetAll() {
+  cfg.platform = '';
+  cfg.category = '';
+  cfg.customCategory = '';
+  cfg.selectedData = [];
+  cfg.outputFormat = '';
+  cfg.targetBuyer = '';
+  // Reset UI
+  document.querySelectorAll('.chip, .data-card, .target-card').forEach(el => el.classList.remove('active'));
+  document.getElementById('custom-category').value = '';
+  goStep(1);
+}
+
+// ── Prompt Generator ───────────────────────────────────
+function generatePrompt() {
+  const cat = cfg.customCategory || cfg.category;
+  const platform = cfg.platform;
+  const dataLines = cfg.selectedData.map(id => `- ${dataLabels[id].icon} **${dataLabels[id].label}**`).join('\n');
+  const platformSlug = platform.toLowerCase().replace(/\s/g,'_');
+
+  const trendExtra = cfg.selectedData.includes('trend')
+    ? `| weekly_trend       | String   | Tren mingguan (naik/turun/stabil)        |
+| search_volume_est  | Integer  | Estimasi volume pencarian                |` : '';
+
+  const reviewExtra = cfg.selectedData.includes('review')
+    ? `| top_positive_review| String   | Contoh ulasan positif terbaik            |
+| top_negative_review| String   | Contoh ulasan negatif terbanyak          |
+| sentiment_score    | Float    | Skor sentimen ulasan (-1 hingga 1)       |` : '';
+
+  const compExtra = cfg.selectedData.includes('competitor')
+    ? `| competitor_count   | Integer  | Jumlah kompetitor pada kata kunci sama   |
+| price_rank         | Integer  | Peringkat harga di kategori              |` : '';
+
+  const prompt =
+`# PROMPT: Program Screening & Scraping Data E-Commerce
+
+## 🎯 TUJUAN PROGRAM
+Buat program Python untuk mengambil, memproses, dan mengekspor data produk
+dari platform ${platform} pada kategori **${cat}**, menghasilkan dataset
+siap jual dalam format **${cfg.outputFormat}** untuk kebutuhan **${cfg.targetBuyer}**.
+
+---
+
+## 🔧 SPESIFIKASI TEKNIS
+
+### Platform Target
+- **E-Commerce:** ${platform}
+- **Kategori Produk:** ${cat}
+- **Jumlah Produk:** Top ${cfg.topN} produk berdasarkan relevansi/penjualan
+
+### Data yang Dikumpulkan
+${dataLines}
+
+### Parameter Scraping
+- **Rentang Waktu Data:** ${cfg.dateRange} hari terakhir
+- **Minimum Ulasan:** ≥ ${cfg.minReviews} ulasan per produk
+- **Format Output:** ${cfg.outputFormat}
+
+---
+
+## 📋 STRUKTUR DATA OUTPUT
+
+| Kolom               | Tipe Data | Keterangan                               |
+|---------------------|-----------|------------------------------------------|
+| product_id          | String    | ID unik produk di platform               |
+| product_name        | String    | Nama lengkap produk                      |
+| brand               | String    | Merek / brand produk                     |
+| category            | String    | Kategori & subkategori                   |
+| price_current       | Integer   | Harga saat ini (Rp)                      |
+| price_original      | Integer   | Harga sebelum diskon (Rp)                |
+| discount_pct        | Float     | Persentase diskon                        |
+| rating              | Float     | Rating rata-rata (0.0–5.0)               |
+| total_reviews       | Integer   | Total ulasan masuk                       |
+| total_sold          | Integer   | Jumlah terjual (jika tersedia)           |
+| seller_name         | String    | Nama toko/penjual                        |
+| seller_location     | String    | Lokasi toko                              |
+| seller_rating       | Float     | Rating penjual                           |
+| stock_available     | Integer   | Stok tersedia                            |
+| scraped_at          | Datetime  | Timestamp pengambilan data               |
+${trendExtra}${reviewExtra}${compExtra}
+
+---
+
+## 🧱 ARSITEKTUR PROGRAM
+
+\`\`\`
+ecommerce_scraper/
+├── main.py
+├── config.py
+├── scrapers/
+│   ├── base_scraper.py
+│   └── ${platformSlug}_scraper.py
+├── processors/
+│   ├── cleaner.py
+│   ├── enricher.py
+│   └── deduplicator.py
+├── exporters/
+│   ├── csv_exporter.py
+│   └── excel_exporter.py
+├── utils/
+│   ├── proxy_rotator.py
+│   ├── rate_limiter.py
+│   └── logger.py
+├── requirements.txt
+└── README.md
+\`\`\`
+
+---
+
+## 💻 IMPLEMENTASI KODE
+
+### Instalasi Dependensi
+\`\`\`bash
+pip install requests beautifulsoup4 selenium playwright \\
+            pandas openpyxl fake-useragent python-dotenv tqdm loguru
+\`\`\`
+
+### config.py
+\`\`\`python
+CONFIG = {
+    "platform": "${platform}",
+    "category": "${cat}",
+    "top_n": ${cfg.topN},
+    "min_reviews": ${cfg.minReviews},
+    "date_range_days": ${cfg.dateRange},
+    "output_format": "${cfg.outputFormat.split(' ')[0].toLowerCase()}",
+    "delay_between_requests": (2, 5),
+    "max_retries": 3,
+    "use_proxy": False,
+    "output_dir": "./output/",
+}
+\`\`\`
+
+### scrapers/base_scraper.py
+\`\`\`python
+import time, random, requests
+from fake_useragent import UserAgent
+from loguru import logger
+from abc import ABC, abstractmethod
+
+class BaseScraper(ABC):
+    def __init__(self, config):
+        self.config = config
+        self.ua = UserAgent()
+        self.session = requests.Session()
+
+    def get_headers(self):
+        return {
+            "User-Agent": self.ua.random,
+            "Accept-Language": "id-ID,id;q=0.9",
+        }
+
+    def rate_limit(self):
+        delay = random.uniform(*self.config["delay_between_requests"])
+        logger.debug(f"Waiting {delay:.2f}s...")
+        time.sleep(delay)
+
+    def safe_get(self, url, **kwargs):
+        for attempt in range(self.config["max_retries"]):
+            try:
+                self.rate_limit()
+                resp = self.session.get(
+                    url, headers=self.get_headers(), timeout=15, **kwargs)
+                resp.raise_for_status()
+                return resp
+            except Exception as e:
+                logger.warning(f"Attempt {attempt+1} failed: {e}")
+        return None
+
+    @abstractmethod
+    def search_products(self, keyword, page=1): pass
+    @abstractmethod
+    def get_product_detail(self, product_id): pass
+    @abstractmethod
+    def scrape(self): pass
+\`\`\`
+
+### processors/cleaner.py
+\`\`\`python
+import pandas as pd, re
+
+def clean_dataset(df):
+    df = df.drop_duplicates(subset=["product_id"])
+    df["price_current"] = df["price_current"].apply(parse_price)
+    df["price_original"] = df["price_original"].apply(parse_price)
+    df["discount_pct"] = (
+        (df["price_original"] - df["price_current"])
+        / df["price_original"] * 100
+    ).round(2).clip(0, 100)
+    df = df[df["total_reviews"] >= ${cfg.minReviews}]
+    for col in ["product_name","seller_name","seller_location"]:
+        if col in df.columns:
+            df[col] = df[col].str.strip().str.replace(r"\\s+", " ", regex=True)
+    return df.reset_index(drop=True)
+
+def parse_price(val):
+    if isinstance(val, (int, float)): return int(val)
+    cleaned = re.sub(r"[^\\d]", "", str(val))
+    return int(cleaned) if cleaned else 0
+\`\`\`
+
+### main.py
+\`\`\`python
+from config import CONFIG
+from processors.cleaner import clean_dataset
+from loguru import logger
+import pandas as pd
+from datetime import datetime
+
+def main():
+    logger.info(f"🚀 Scraping: {CONFIG['platform']} — {CONFIG['category']}")
+    # from scrapers.${platformSlug}_scraper import Scraper
+    # raw_data = Scraper(CONFIG).scrape()
+    df = pd.DataFrame(raw_data)
+    df = clean_dataset(df)
+    df["scraped_at"] = datetime.now().isoformat()
+    logger.info(f"✅ Total produk valid: {len(df)}")
+    ts = datetime.now().strftime('%Y%m%d')
+    fname = f"{CONFIG['platform']}_{CONFIG['category']}_{ts}"
+    df.to_csv(f"./output/{fname}.csv", index=False, encoding="utf-8-sig")
+    logger.success(f"📁 Tersimpan: ./output/{fname}.csv")
+
+if __name__ == "__main__":
+    main()
+\`\`\`
+
+---
+
+## 📊 LAPORAN RINGKASAN OTOMATIS
+
+\`\`\`
+====================================
+  LAPORAN SCREENING — ${platform}
+  Kategori : ${cat}
+====================================
+Total produk di-scrape  : [N]
+Produk lolos filter     : [N]
+Rata-rata harga         : Rp [X]
+Range harga             : Rp [Min] – Rp [Max]
+Rata-rata rating        : [X] / 5.0
+Produk dengan diskon    : [N] ([X]%)
+====================================
+\`\`\`
+
+---
+
+## 🛡️ ETIKA & KEPATUHAN
+- Patuhi robots.txt dan Terms of Service platform
+- Gunakan delay wajar (2–5 detik antar request)
+- Jangan scrape data personal pengguna/pembeli
+- Data hanya untuk analisis bisnis, bukan manipulasi harga
+- Simpan log aktivitas untuk audit trail
+
+---
+
+## 🎁 NILAI JUAL DATASET
+Dataset ini cocok untuk **${cfg.targetBuyer}** karena:
+- Hemat waktu riset manual hingga 90%
+- Data terstruktur & siap analisis di ${cfg.outputFormat}
+- Update berkala via cron job
+- Insight kompetitif untuk strategi pricing & stok
+
+---
+*Generated by DataScrape Pro — E-Commerce Screening Prompt Builder*`;
+
+  document.getElementById('prompt-output').textContent = prompt;
+
+  // Badges
+  const badges = [platform, cat, cfg.outputFormat, `Top ${cfg.topN}`];
+  document.getElementById('badge-row').innerHTML =
+    badges.map(b => `<span class="badge">${b}</span>`).join('');
+}
+
+// ── Copy ───────────────────────────────────────────────
+function copyPrompt() {
+  const text = document.getElementById('prompt-output').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✓ Tersalin!';
+    btn.className = 'btn btn-success btn-grow';
+    setTimeout(() => {
+      btn.textContent = '📋 Salin Prompt';
+      btn.className = 'btn btn-primary btn-grow';
+    }, 2200);
+  });
+}
+</script>
+</body>
+</html>
